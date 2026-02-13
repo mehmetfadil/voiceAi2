@@ -1,0 +1,15 @@
+{
+  "ExpandedNodes": [
+    "",
+    "\\src",
+    "\\src\\components",
+    "\\src\\components\\auth",
+    "\\src\\components\\common",
+    "\\src\\components\\dashboard",
+    "\\src\\components\\layout",
+    "\\src\\context",
+    "\\src\\pages",
+    "\\src\\utils"
+  ],
+  "PreviewInSolutionExplorer": false
+}

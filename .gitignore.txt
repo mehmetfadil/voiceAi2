@@ -1,0 +1,18 @@
+# Python / Backend
+__pycache__/
+*.py[cod]
+*$py.class
+venv/
+.env
+.idea/
+*.db
+voice_ai.db
+chroma_db/
+uploads/
+
+# Node / Frontend
+node_modules/
+dist/
+.DS_Store
+coverage/
+.vscode/

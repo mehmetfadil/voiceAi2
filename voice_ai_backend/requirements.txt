@@ -1,0 +1,8 @@
+SpeechRecognition
+gTTS
+openai
+python-dotenv
+pyaudio
+playsound==1.2.2
+colorama
+requests
