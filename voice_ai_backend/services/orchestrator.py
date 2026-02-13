@@ -6,11 +6,11 @@ import re
 from typing import AsyncGenerator
 from services.rag.pipeline import RAGPipeline
 from services.llm_service import CustomLLMService
-from services.tts_service import GoogleTTSService
+from services.tts_service import FalTTSService
 
 
 class ConversationOrchestrator:
-    def __init__(self, rag: RAGPipeline, llm: CustomLLMService, tts: GoogleTTSService):
+    def __init__(self, rag: RAGPipeline, llm: CustomLLMService, tts: FalTTSService):
         self.rag = rag
         self.llm = llm
         self.tts = tts
@@ -26,23 +26,22 @@ class ConversationOrchestrator:
         # 2. RAG BAĞLAMI GETİR (Asenkron)
         context, sources = await self.rag.get_context_async(user_id, user_message)
 
-        # Kaynakları hemen bildir (Kullanıcı hangi dokümana bakıldığını görsün)
+        # Kaynakları hemen bildir
         if sources:
             yield self._sse_event("sources", sources)
 
-        # 3. DURUM: KONUŞUYOR (LLM Üretime Başladı)
+        # 3. DURUM: KONUŞUYOR
         yield self._sse_event("status", "speaking")
 
         # LLM Akışı
         llm_generator = self.llm.generate_stream(system_prompt, user_message, context)
 
-        # Cümle Tamponu (Kelimeleri biriktirip cümle olunca sese çevireceğiz)
         buffer = ""
-        # Cümle sonlarını yakalayan regex (. ! ? ve sonrasında boşluk veya satır sonu)
+        # Cümle sonlarını yakalayan regex
         sentence_endings = re.compile(r'(?<=[.?!])\s+')
 
         async for token in llm_generator:
-            # Token'ı metin olarak hemen gönder (Yazı aksın)
+            # Token'ı metin olarak hemen gönder
             yield self._sse_event("token", token)
 
             buffer += token
@@ -51,9 +50,8 @@ class ConversationOrchestrator:
             parts = sentence_endings.split(buffer)
 
             if len(parts) > 1:
-                # Son parça hariç hepsi tamamlanmış cümledir
                 complete_sentences = parts[:-1]
-                buffer = parts[-1]  # Yarım kalan cümleyi tut
+                buffer = parts[-1]
 
                 for sentence in complete_sentences:
                     if sentence.strip():
@@ -61,7 +59,7 @@ class ConversationOrchestrator:
                         async for event in self._process_audio(sentence):
                             yield event
 
-        # Kalan son parçayı işle (HATA BURADAYDI, DÜZELTİLDİ)
+        # Kalan son parçayı işle
         if buffer.strip():
             async for event in self._process_audio(buffer):
                 yield event
@@ -71,7 +69,7 @@ class ConversationOrchestrator:
 
     async def _process_audio(self, text: str) -> AsyncGenerator[str, None]:
         """Metni sese çevirir ve Base64 olarak stream eder."""
-        # Google TTS (veya diğerleri) sesi üretir
+        # TTS servisi sesi üretir
         audio_bytes = await self.tts.speak_text(text)
 
         if audio_bytes:
